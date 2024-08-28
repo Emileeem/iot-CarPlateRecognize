@@ -1,13 +1,15 @@
+#include <Arduino.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <Servo.h>
+#include <ESP32Servo.h>
+#include <ArduinoJson.h>
 
-const char* ssid = "teste";
-const char* password = "testandoaq";
+const char* ssid = "TccSenai";
+const char* password = "testandoaqui";
 
 const char* host = "http://127.0.0.1:5000/dados.json";
 
-Servo meuservo;
+Servo meuservo; // Use ESP32Servo instead of Servo
 int angulo = 0;
 String lastPlate = ""; 
 int lastExists = 0;    
@@ -28,7 +30,7 @@ void setup() {
   Serial.print("Endereço IP: ");
   Serial.println(WiFi.localIP());
 
-  meuservo.attach(9);
+  meuservo.attach(18);
   meuservo.write(0); 
   lastPlate = "";
   lastExists = 0;
@@ -44,6 +46,7 @@ void loop() {
     if (httpCode > 0) {  // Verifica se o pedido foi bem-sucedido
       String response = http.getString();
 
+      // Use StaticJsonDocument instead of DynamicJsonDocument
       StaticJsonDocument<200> doc;
       DeserializationError error = deserializeJson(doc, response);
 
