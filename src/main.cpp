@@ -3,93 +3,64 @@
 #include <HTTPClient.h>
 #include <ESP32Servo.h>
 #include <ArduinoJson.h>
+#include <FirebaseESP32.h>
 
-const char* ssid = "TccSenai";
-const char* password = "testandoaqui";
+// Credenciais Wi-Fi
+#define WIFI_SSID = "TccSenai";
+#define WIFI_SENHA = "testandoaqui";
 
-const char* host = "http://127.0.0.1:5000/dados.json";
+// Configurações do Firebase
+#define FB_HOST "https://iot-tcc-ef560-default-rtdb.firebaseio.com/"
+#define FB_AUTH "14aO4okIScEw8Qlv6ojs009rX2Iv24jGxLEtkPxO" // Token de autenticação
 
-Servo meuservo; // Use ESP32Servo instead of Servo
+// Servo
+Servo meuservo; 
 int angulo = 0;
 String lastPlate = ""; 
-int lastExists = 0;    
+int lastExists = 0;
+
+//Variaveis Globais 
+int FBExists;
+char FBPlates;
+
+void connect()
+{
+    WiFi.begin(WIFI_SSID, WIFI_SENHA);
+    while (WiFi.status() != WL_CONNECTED);
+}
+
+void refresh() {
+	connect();
+
+	Firebase.get(firebaseData, "/plates/exists");
+	FBExists = firebaseData.intData();
+
+	Firebase.get(firebaseData, "/plates/exists");
+	FBPlates = FirebaseData.charData();
+
+	WiFi.disconnect();
+}
 
 void setup() {
-  Serial.begin(115200);
-  delay(1000);
-
-  Serial.println("Conectando ao Wi-Fi...");
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
+    Serial.begin(115200);
     delay(1000);
-    Serial.println("Conectando...");
-  }
 
-  Serial.println("Conectado ao Wi-Fi!");
-  Serial.print("Endereço IP: ");
-  Serial.println(WiFi.localIP());
+    connect();
+    delay(100);
+    Firebase.begin(FB_HOST, FB_AUTH);
+    Firebase.reconnectWiFi(true);
+    Firebase.setReadTimeout(firebaseData, 1000 * 60);
+    Firebase.setwriteSizeLimit(firebaseData, "tiny");
+    WiFi.disconnect();
 
-  meuservo.attach(18);
-  meuservo.write(0); 
-  lastPlate = "";
-  lastExists = 0;
+    meuservo.attach(18);
+    meuservo.write(0); 
+    lastPlate = "";
+    lastExists = 0;
 }
 
 void loop() {
-  if (WiFi.status() == WL_CONNECTED) { // Verifica se está conectado ao Wi-Fi
-    HTTPClient http;
-
-    http.begin(host);  
-    int httpCode = http.GET();  
-
-    if (httpCode > 0) {  // Verifica se o pedido foi bem-sucedido
-      String response = http.getString();
-
-      // Use StaticJsonDocument instead of DynamicJsonDocument
-      StaticJsonDocument<200> doc;
-      DeserializationError error = deserializeJson(doc, response);
-
-      if (error) {
-        Serial.print("Falha ao analisar JSON: ");
-        Serial.println(error.c_str());
-        delay(10000); 
-        return;
-      }
-
-      int exists = doc["exists"];
-      const char* plate = doc["plate"];
-
-      Serial.print("Exists: ");
-      Serial.println(exists);
-      Serial.print("Plate: ");
-      if (plate == nullptr) {
-        Serial.println("null");
-      } else {
-        Serial.println(plate);
-      }
-
-      if (String(plate) != lastPlate && exists == 1) {
-        angulo = 180;  
-        delay(8000);
-        angulo = 0;
-      } else {
-        angulo = 0;    
-      }
-
-      meuservo.write(angulo);
-
-      lastPlate = plate ? String(plate) : "";
-      lastExists = exists;
-    } else {
-      Serial.print("Erro no HTTP: ");
-      Serial.println(httpCode);
-    }
-
-    http.end();  
-  } else {
-    Serial.println("Desconectado do Wi-Fi");
-  }
-
-  delay(10000);
+    refresh(); 
+    delay(2000); // Atualiza a cada 2 segundos
+	Firebase.updateNode(firebaseData, "/plates", json);
 }
