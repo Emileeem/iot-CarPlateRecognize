@@ -3,6 +3,10 @@
 #include <HTTPClient.h>
 #include <ESP32Servo.h>
 #include <FirebaseESP32.h>
+#include <Ultrasonic.h> 
+
+#define ledVERDE 7
+#define ledVERM 6
 
 #define WIFI_SSID "TccSenai"
 #define WIFI_SENHA "testandoaqui"
@@ -10,6 +14,11 @@
 #define FB_HOST "https://iot-tcc-ef560-default-rtdb.firebaseio.com/"
 #define FB_AUTH "14aO4okIScEw8Qlv6ojs009rX2Iv24jGxLEtkPxO" // Token de autenticação
 
+//ultrassonico
+Ultrasonic ultrassom(5, 4);
+long distancia;
+
+//servo
 Servo meuservo; 
 int angulo = 0;
 String lastPlate = ""; 
@@ -64,6 +73,24 @@ void controlarServo() {
     }
 }
 
+void vagaDisponível() {
+    delay(1000);
+    distancia = ultrassom.Ranging(CM);
+    Serial.print("Distância = ");
+    Serial.print(distancia); 
+    Serial.println("cm"); 
+    if(distancia > 5) {
+        digitalWrite(ledVERDE, HIGH)
+        digitalWrite(ledVERM, LOW)
+    }
+    else {
+        digitalWrite(ledVERDE, LOW)
+        digitalWrite(ledVERM, HIGH)
+    }
+    
+    delay(1000); 
+}
+
 void setup() {
     Serial.begin(115200);
     delay(1000);
@@ -81,10 +108,13 @@ void setup() {
     lastPlate = "";
     lastExists = 0;
     lastMoveTime = 0;
+    pinMode(ledVERDE, OUTPUT);
+    pinMode(ledVERM, OUTPUT);
 }
 
 void loop() {
     refresh(); 
     controlarServo(); 
+    vagaDisponível();
     delay(2000); // Atualiza a cada 2 segundos
 }
