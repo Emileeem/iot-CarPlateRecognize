@@ -19,9 +19,10 @@
 #define LED_VERDE 14
 #define LED_VERM 12
 
-Ultrasonic ultrassom(5, 4); // Pinos TRIG e ECHO
+Ultrasonic ultrassom(15, 4); // Pinos TRIG e ECHO
 long distancia;
 Servo meuservo;
+String currPlate = "";
 String lastPlate = "";
 int lastExists = 0;
 unsigned long lastMoveTime = 0;
@@ -69,8 +70,8 @@ void initializeFirebase()
 // Função para atualizar os dados do Firebase
 void refresh()
 {
-    connect();
-    initializeFirebase();
+    // connect();
+    // initializeFirebase();
 
     // Get values from Firebase
     Serial.print("Getting /plates/exists... ");
@@ -88,14 +89,15 @@ void refresh()
     String plateData = Database.get<String>(client, "/plates/plate");
     if (client.lastError().code() == 0)
     {
-        lastPlate = plateData;
+        currPlate = plateData;
+        Serial.println(plateData);
     }
     else
     {
         printError(client.lastError().code(), client.lastError().message());
     }
 
-    WiFi.disconnect();
+    // WiFi.disconnect();
 }
 
 // Função para controlar o servo motor
@@ -103,12 +105,13 @@ void controlarServo()
 {
     unsigned long currentTime = millis();
 
-    if (lastExists == 1)
+    if (lastExists)
     {
-        if (lastPlate != "")
+        if (currPlate != lastPlate)
         {
             meuservo.write(180);
             lastMoveTime = currentTime;
+            lastPlate = currPlate;
         }
         else
         {
@@ -118,7 +121,7 @@ void controlarServo()
     else
     {
         meuservo.write(0);
-        lastPlate = "";
+        currPlate = "";
     }
 
     if (meuservo.read() == 180 && (currentTime - lastMoveTime >= 3000))
@@ -166,7 +169,7 @@ void setup()
 
     meuservo.attach(23);
     meuservo.write(0);
-    lastPlate = "";
+    currPlate = "";
     lastExists = 0;
     lastMoveTime = 0;
     pinMode(LED_VERDE, OUTPUT);
