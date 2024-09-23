@@ -1,0 +1,1 @@
+https://randomnerdtutorials.com/install-esp32-esp8266-usb-drivers-cp210x-windows/
