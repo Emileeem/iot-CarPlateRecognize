@@ -27,6 +27,10 @@ String lastPlate = "";
 int lastExists = 0;
 unsigned long lastMoveTime = 0;
 
+int teste = 0;
+
+byte unitSegment[] = {25, 19, 21, 26};
+
 FirebaseApp app;
 RealtimeDatabase Database;
 AsyncResult result;
@@ -39,6 +43,36 @@ AsyncClientClass client(ssl, getNetwork(network));
 void printError(int code, const String &msg)
 {
     Serial.printf("Error, msg: %s, code: %d\n", msg.c_str(), code);
+}
+
+void binaryOutput(byte output[], int number)
+{
+    if (number % 2 == 0)
+    {
+        digitalWrite(output[0], LOW);
+        Serial.print(output[0]);
+        Serial.println(" LOW");
+    }
+    else
+    {
+        Serial.print(output[0]);
+        Serial.println(" HIGH");
+        digitalWrite(output[0], HIGH);
+    }
+
+    if (number % 4 > 1)
+        digitalWrite(output[1], HIGH);
+    else
+        digitalWrite(output[1], LOW);
+    if (number % 8 > 3)
+        digitalWrite(output[2], HIGH);
+    else
+        digitalWrite(output[2], LOW);
+
+    if (number % 16 > 7)
+        digitalWrite(output[3], HIGH);
+    else
+        digitalWrite(output[3], LOW);
 }
 
 // Função para conectar ao Wi-Fi
@@ -153,33 +187,41 @@ void vagaDisponivel()
 void setup()
 {
     Serial.begin(115200);
-    delay(1000);
+    // delay(1000);
 
-    connect();
-    delay(100);
+    // connect();
+    // delay(100);
 
-    // Initialize Firebase
-    Firebase.printf("Firebase Client v%s\n", FIREBASE_CLIENT_VERSION);
-    ssl.setInsecure();
-    #if defined(ESP8266)
-    ssl.setBufferSizes(1024, 1024);
-    #endif
+    // // Initialize Firebase
+    // Firebase.printf("Firebase Client v%s\n", FIREBASE_CLIENT_VERSION);
+    // ssl.setInsecure();
+    // #if defined(ESP8266)
+    // ssl.setBufferSizes(1024, 1024);
+    // #endif
 
-    initializeFirebase();
+    // initializeFirebase();
 
-    meuservo.attach(23);
-    meuservo.write(0);
-    currPlate = "";
-    lastExists = 0;
-    lastMoveTime = 0;
-    pinMode(LED_VERDE, OUTPUT);
-    pinMode(LED_VERM, OUTPUT);
+    // meuservo.attach(23);
+    // meuservo.write(0);
+    // currPlate = "";
+    // lastExists = 0;
+    // lastMoveTime = 0;
+    // pinMode(LED_VERDE, OUTPUT);
+    // pinMode(LED_VERM, OUTPUT);
+
+    for (int i = 0; i < 4; i++)
+    {
+        pinMode(unitSegment[i], OUTPUT);
+    }
 }
 
 void loop()
 {
-    refresh();
-    controlarServo();
-    vagaDisponivel();
+    // refresh();
+    // controlarServo();
+    // vagaDisponivel();
+    binaryOutput(unitSegment, teste);
+    Serial.printf("%d", teste);
+    teste++;
     delay(2000); // Atualiza a cada 2 segundos
 }
