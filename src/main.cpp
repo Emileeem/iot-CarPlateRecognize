@@ -21,11 +21,16 @@
 
 Ultrasonic ultrassom(15, 4); // Pinos TRIG e ECHO
 long distancia;
+
 Servo meuservo;
 String currPlate = "";
 String lastPlate = "";
 int lastExists = 0;
 unsigned long lastMoveTime = 0;
+
+byte unitSegment[] = {25, 19, 21, 26};
+int vagas = 6;
+bool flagVagas = false;
 
 FirebaseApp app;
 RealtimeDatabase Database;
@@ -130,6 +135,36 @@ void controlarServo()
     }
 }
 
+void binaryOutput(byte output[], int number)
+{
+    if (number % 2 == 0)
+    {
+        digitalWrite(output[0], LOW);
+        Serial.print(output[0]);
+        Serial.println(" LOW");
+    }
+    else
+    {
+        Serial.print(output[0]);
+        Serial.println(" HIGH");
+        digitalWrite(output[0], HIGH);
+    }
+
+    if (number % 4 > 1)
+        digitalWrite(output[1], HIGH);
+    else
+        digitalWrite(output[1], LOW);
+    if (number % 8 > 3)
+        digitalWrite(output[2], HIGH);
+    else
+        digitalWrite(output[2], LOW);
+
+    if (number % 16 > 7)
+        digitalWrite(output[3], HIGH);
+    else
+        digitalWrite(output[3], LOW);
+}
+
 // Função para verificar a disponibilidade da vaga usando ultrassônico
 void vagaDisponivel()
 {
@@ -138,15 +173,15 @@ void vagaDisponivel()
     Serial.print("Distância = ");
     Serial.print(distancia);
     Serial.println("cm");
-    if (distancia > 5)
+    if (distancia < 5 && !flagVagas)
     {
-        digitalWrite(LED_VERDE, HIGH);
-        digitalWrite(LED_VERM, LOW);
+        vagas--;
+        flagVagas = true;
     }
     else
     {
-        digitalWrite(LED_VERDE, LOW);
-        digitalWrite(LED_VERM, HIGH);
+        vagas++;
+        flagVagas = false;
     }
 }
 
@@ -172,8 +207,10 @@ void setup()
     currPlate = "";
     lastExists = 0;
     lastMoveTime = 0;
-    pinMode(LED_VERDE, OUTPUT);
-    pinMode(LED_VERM, OUTPUT);
+    for (int i = 0; i < 4; i++)
+    {
+        pinMode(unitSegment[i], OUTPUT);
+    }
 }
 
 void loop()
@@ -181,5 +218,6 @@ void loop()
     refresh();
     controlarServo();
     vagaDisponivel();
+    binaryOutput(unitSegment, vagas);
     delay(2000); // Atualiza a cada 2 segundos
 }
