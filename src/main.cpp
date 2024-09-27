@@ -30,7 +30,7 @@ unsigned long lastMoveTime = 0;
 
 byte unitSegment[] = {25, 19, 21, 26};
 int vagas = 6;
-bool flagVagas = false;
+bool carroPresente = false;
 
 FirebaseApp app;
 RealtimeDatabase Database;
@@ -135,6 +135,7 @@ void controlarServo()
     }
 }
 
+// Função para exibir o número no display
 void binaryOutput(byte output[], int number)
 {
     if (number % 2 == 0)
@@ -169,19 +170,20 @@ void binaryOutput(byte output[], int number)
 void vagaDisponivel()
 {
     delay(1000);
-    distancia = ultrassom.read(); // Supondo que 'read' seja o método correto
+    distancia = ultrassom.read();
     Serial.print("Distância = ");
     Serial.print(distancia);
     Serial.println("cm");
-    if (distancia < 5 && !flagVagas)
+
+    if (distancia < 5 && !carroPresente)
     {
         vagas--;
-        flagVagas = true;
+        carroPresente = true;
     }
-    else
+    else if (distancia >= 5 && carroPresente)
     {
         vagas++;
-        flagVagas = false;
+        carroPresente = false;
     }
 }
 
@@ -193,7 +195,6 @@ void setup()
     connect();
     delay(100);
 
-    // Initialize Firebase
     Firebase.printf("Firebase Client v%s\n", FIREBASE_CLIENT_VERSION);
     ssl.setInsecure();
     #if defined(ESP8266)
@@ -219,5 +220,5 @@ void loop()
     controlarServo();
     vagaDisponivel();
     binaryOutput(unitSegment, vagas);
-    delay(2000); // Atualiza a cada 2 segundos
+    delay(2000);
 }
