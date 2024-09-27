@@ -179,11 +179,15 @@ void vagaDisponivel()
     {
         vagas--;
         carroPresente = true;
+        digitalWrite(LED_VERM, HIGH);
+        digitalWrite(LED_VERDE, LOW);
     }
     else if (distancia >= 5 && carroPresente)
     {
         vagas++;
         carroPresente = false;
+        digitalWrite(LED_VERM, LOW);
+        digitalWrite(LED_VERDE, HIGH);
     }
 }
 
@@ -208,6 +212,8 @@ void setup()
     currPlate = "";
     lastExists = 0;
     lastMoveTime = 0;
+    pinMode(LED_VERDE, OUTPUT);
+    pinMode(LED_VERM, OUTPUT);
     for (int i = 0; i < 4; i++)
     {
         pinMode(unitSegment[i], OUTPUT);
@@ -220,5 +226,5 @@ void loop()
     controlarServo();
     vagaDisponivel();
     binaryOutput(unitSegment, vagas);
-    delay(2000);
+    // delay(500);
 }
