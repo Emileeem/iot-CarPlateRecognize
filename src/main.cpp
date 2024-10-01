@@ -29,7 +29,7 @@ int lastExists = 0;
 unsigned long lastMoveTime = 0;
 
 byte unitSegment[] = {25, 19, 21, 26};
-int vagas = 6;
+int vagas = 5;
 bool carroPresente = false;
 
 FirebaseApp app;
@@ -114,18 +114,19 @@ void controlarServo()
     {
         if (currPlate != lastPlate)
         {
-            meuservo.write(180);
+            meuservo.write(150);
             lastMoveTime = currentTime;
             lastPlate = currPlate;
+            delay(50);
         }
         else
         {
-            meuservo.write(0);
+            meuservo.write(180);
         }
     }
     else
     {
-        meuservo.write(0);
+        meuservo.write(180);
         currPlate = "";
     }
 
